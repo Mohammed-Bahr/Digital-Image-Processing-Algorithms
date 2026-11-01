@@ -19,12 +19,12 @@ from PyQt5.QtWidgets import (QAbstractItemView, QAction, QApplication,
                              QTabWidget, QToolBar, QTreeWidget, QTreeWidgetItem,
                              QVBoxLayout, QWidget)
 
-from .. import frequency as fr
+from ..core.dft_reference import dft_worked_example
+from ..core.utils import (as_uint8, describe_kernel, format_matrix,
+                          histogram_counts, resize)
 from ..demo import make_demo_image
 from ..operations import (CATEGORY_ORDER, OPERATIONS, OpResult, Operation,
                           Param, find_operation, operations_by_category)
-from ..utils import (as_uint8, describe_kernel, format_matrix,
-                    histogram_counts, resize_bilinear)
 from .widgets import CurveWidget, HistogramWidget, ImageView
 
 MAX_SOURCE_SIDE = 4096    # safety cap for huge photos
@@ -261,7 +261,7 @@ class MainWindow(QMainWindow):
         self.op_title.setWordWrap(True)
         self.op_meta = QLabel("")
         self.op_meta.setObjectName("opMeta")
-        self.op_desc = QLabel("Every algorithm is implemented from scratch. "
+        self.op_desc = QLabel("Algorithms are grouped by topic. "
                               "Pick one on the left to begin.")
         self.op_desc.setObjectName("opDesc")
         self.op_desc.setWordWrap(True)
@@ -669,7 +669,7 @@ class MainWindow(QMainWindow):
             scale = float(limit) / float(max(h, w))
             nw = max(1, int(round(w * scale)))
             nh = max(1, int(round(h * scale)))
-            return as_uint8(resize_bilinear(src, nw, nh)), \
+            return as_uint8(resize(src, nw, nh, "area")), \
                 f"working at {nw}×{nh} (source {w}×{h})"
         return src.copy(), ""
 
@@ -791,12 +791,13 @@ class MainWindow(QMainWindow):
 
     def _show_dft_demo(self):
         self._text_dialog("DFT worked example — Lecture 4",
-                          fr.dft_worked_example(), (760, 600))
+                          dft_worked_example(), (760, 600))
 
     def _show_about(self):
         lines = [
-            "DIP Lab — every algorithm below is implemented from scratch",
-            "with NumPy in the diplab/ package (no OpenCV).",
+            "DIP Lab — one topic folder per note section, one algorithm per file.",
+            "The numerical core uses NumPy, OpenCV, SciPy and NumPy's FFT;",
+            "the lecture-specific formulas (equalisation, masks, HOG) are kept.",
             "",
             "Notes 00 — Foundations & Enhancement (Lec 1-2)",
             "  • pixel matrices, RGB -> grayscale (average / weighted)",
@@ -810,7 +811,7 @@ class MainWindow(QMainWindow):
             "  • border padding: reflect / replicate / zeros",
             "",
             "Notes 02 — Frequency Domain (Lec 4)",
-            "  • 1-D/2-D DFT and a radix-2 FFT (both from scratch)",
+            "  • DFT reference example + NumPy FFT for the filters",
             "  • spectrum visualisation, ideal/Butterworth/Gaussian LP & HP",
             "  • band-pass, band-reject, notch, homomorphic filtering",
             "",

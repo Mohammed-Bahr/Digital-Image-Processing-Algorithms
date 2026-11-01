@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from .utils import as_uint8
+from .core.utils import as_uint8
 
 
 def make_demo_image(size: int = 512) -> np.ndarray:

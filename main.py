@@ -3,7 +3,7 @@
 
     python main.py
 
-Requires: numpy, pillow, PyQt5.
+Requires: numpy, pillow, PyQt5, opencv-python-headless, scipy.
 """
 
 from __future__ import annotations
