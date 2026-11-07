@@ -39,7 +39,11 @@ def as_float(img: np.ndarray) -> np.ndarray:
 
 def as_uint8(img: np.ndarray, lo: float = 0, hi: float = 255) -> np.ndarray:
     """Round, clip and cast an image to uint8."""
-    return np.clip(np.rint(img), lo, hi).astype(np.uint8)
+    return np.clip(np.rint(img), lo, hi).astype(np.uint8) 
+
+# means constraining pixel values to a valid 0–255 
+# range so that out-of-bounds or floating-point numbers do not wrap around or 
+# break when converted to an 8-bit unsigned integer
 
 
 def ensure_rgb(img: np.ndarray) -> np.ndarray:
