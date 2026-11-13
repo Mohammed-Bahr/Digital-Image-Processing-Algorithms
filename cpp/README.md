@@ -10,6 +10,7 @@ cpp/
   src/core/                shared, algorithm-independent code
   src/<topic>/             one .cpp per algorithm
   src/cli.cpp              the `diplab` command line tool
+  gui/                     raylib front end (optional)
   tests/selftest.cpp       the notes' worked examples as automatic checks
 ```
 
@@ -21,8 +22,9 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j
 ```
 
-Produces `build/diplab` (CLI) and `build/diplab_selftest` (checks).
-Only a C++17 compiler is required.
+Produces `build/diplab` (CLI) and `build/diplab_selftest` (checks), plus
+`build/diplab_gui` when raylib is installed. The core and the checks need only a
+C++17 compiler.
 
 ```bash
 ./build/diplab_selftest      # or: ctest --test-dir build
@@ -50,6 +52,52 @@ images (spectra, filter mask, Harris response, gradient magnitude, ...).
 
 Formats: `.pgm` / `.ppm` (binary PGM/PPM) and 24-bit `.bmp`, read and write.
 Convert other formats with ImageMagick (`magick photo.jpg photo.ppm`).
+
+## GUI (raylib)
+
+The same library is wrapped in a raylib desktop window. The algorithms are not
+reimplemented or modified for it: the GUI reads the operation registry, draws
+the parameters each operation declares and calls the same `apply`.
+
+Requirements: raylib 5.x visible to `pkg-config` (`pkg-config --libs raylib`),
+for example `sudo apt install libraylib-dev`. When raylib is missing the GUI
+target is skipped and the rest still builds; `-DDIPLAB_BUILD_GUI=OFF` disables
+it explicitly.
+
+```bash
+./build/diplab_gui                        # opens on the box filter
+./build/diplab_gui --op lowpass           # start on another algorithm
+./build/diplab_gui --image photo.jpg      # start on your own image
+./build/diplab_gui --gallery              # start in the gallery
+./build/diplab_gui --screenshot 2 --out preview.png   # save a frame and exit
+```
+
+What it shows:
+
+* **Viewport** — one large canvas with a draggable split: input on the left,
+  output on the right (or Input / Output only).
+* **Histogram** — input and output luminance histograms overlaid, with means and
+  standard deviations, so the effect of each operation is visible at a glance.
+* **Sidebar** — all 32 algorithms grouped by topic, with counts and a search box.
+* **Gallery** — every algorithm applied to the current input at default settings,
+  with timings; click a card to open its parameters.
+* **Inspector** — description, live parameter controls, Apply / Reset / Save and
+  the operation's formatted explanation (its spectrum mask mean, corner count, ...).
+
+Controls: `F5` re-run, `S` save the result as `diplab_<key>.ppm`, `G` toggle the
+gallery, `R` reset parameters, `Esc` leave the search box or the gallery, mouse
+wheel scrolls the sidebar, explanation and gallery. Drag any PNG, JPEG, BMP,
+PGM or PPM file onto the window to load it, or pass `--image PATH`; large images
+are scaled down to 1024 px on the long side for the working copy, and the
+viewport and gallery follow the new input.
+
+Only the GUI decodes PNG/JPEG (through raylib's loader); the library and CLI
+stay dependency-free, so for the CLI convert first, e.g.
+`convert photo.jpg photo.ppm && ./build/diplab run gamma photo.ppm out.ppm`.
+
+`--screenshot SEC --out PATH` writes one PNG after `SEC` seconds and quits, which
+is how the layout was checked without a compositor. Note that raylib writes the
+PNG to the working directory using only the file name.
 
 ## Layout and algorithm map
 
@@ -114,14 +162,17 @@ Shared code lives in `src/core/`:
 
 ## Differences from the Python version
 
-* **No GUI.** The PyQt5 browser/preview window is not ported — this is the
-  algorithm library plus a CLI. Everything numeric is present.
+* **GUI toolkit.** The front end is raylib (OpenGL) instead of PyQt5. It exposes
+  the same 32 algorithms, parameters and explanations, but draws its own widgets
+  and adds a split compare view, an overlaid histogram and a gallery grid.
 * **Own numerics.** The Python code calls OpenCV/SciPy; here every filter is an
   explicit loop, and the FFT is hand-written, so results can differ in the last
   bit and in interpolation details of filter tails.
 * **Noise generators** use `std::mt19937`, so a given seed does not reproduce
   NumPy's exact noise pattern.
-* **Image IO** is limited to PGM/PPM/BMP instead of PIL's full format list.
+* **Image IO.** The library and CLI read/write PGM/PPM/BMP only instead of
+  PIL's full format list; the GUI additionally opens anything raylib decodes
+  (PNG, JPEG, GIF, TGA, BMP) and converts it to the internal image.
 
 ## Adding an algorithm
 

@@ -41,3 +41,28 @@ endif()
 
 enable_testing()
 add_test(NAME selftest COMMAND diplab_selftest)
+
+# --------------------------------------------------------------------------
+# Optional raylib GUI. The algorithm library above is not modified by this.
+# --------------------------------------------------------------------------
+option(DIPLAB_BUILD_GUI "Build the raylib desktop GUI" ON)
+if(DIPLAB_BUILD_GUI)
+  find_package(PkgConfig QUIET)
+  if(PkgConfig_FOUND)
+    pkg_check_modules(RAYLIB QUIET IMPORTED_TARGET raylib)
+  endif()
+
+  if(TARGET PkgConfig::RAYLIB)
+    add_executable(diplab_gui
+      gui/main_gui.cpp
+      gui/app.cpp
+      gui/theme.cpp)
+    target_link_libraries(diplab_gui PRIVATE diplab_lib PkgConfig::RAYLIB)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+      target_compile_options(diplab_gui PRIVATE -Wall -Wextra)
+    endif()
+    message(STATUS "raylib GUI: enabled (diplab_gui)")
+  else()
+    message(WARNING "raylib not found - the GUI target (diplab_gui) will be skipped")
+  endif()
+endif()

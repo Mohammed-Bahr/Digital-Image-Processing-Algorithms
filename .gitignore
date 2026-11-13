@@ -4,5 +4,5 @@ __pycache__/
 venv/
 .DS_Store
 
-# C++ build output
-cpp/build/
+# C++ output
+cpp/
