@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Qt runtime libraries
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libgl1 libegl1 libxkbcommon-x11-0
+
+      - name: Run self-test
+        run: python selftest.py
+
+      # The GUI is the main entry point, so make sure it also starts without
+      # a display. Qt's offscreen platform needs no X server or xvfb.
+      - name: Smoke-test the GUI
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          python - <<'PY'
+          from PyQt5.QtWidgets import QApplication
+
+          app = QApplication([])
+          from diplab.gui.main_window import MainWindow
+
+          window = MainWindow()
+          assert window.windowTitle()
+          print("GUI started:", window.windowTitle())
+          PY

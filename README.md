@@ -1,5 +1,7 @@
 # DIP Lab — topic folders, one algorithm per file
 
+[![CI](https://github.com/Mohammed-Bahr/Digital-Image-Processing-Algorithms/actions/workflows/ci.yml/badge.svg)](https://github.com/Mohammed-Bahr/Digital-Image-Processing-Algorithms/actions/workflows/ci.yml)
+
 A complete implementation of the algorithms in the four DIP lecture notes,
 organised by topic, plus a desktop GUI (PyQt5) that loads an image, lists the
 algorithms, exposes their parameters, and previews the result live.
